@@ -4,6 +4,7 @@ import Filter from './components/Filter'
 import Form from './components/Form'
 import Persons from './components/Persons'
 import personService from './services/persons'
+import Notification from './components/Notification'
 import './index.css'
 
 const App = () => {
@@ -11,6 +12,7 @@ const App = () => {
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [filter, setFilter] = useState('')
+  const [errorMessage, setErrorMessage] = useState(null)
 
   useEffect(() => {
     personService
@@ -33,14 +35,24 @@ const App = () => {
         .create(nameObject)
         .then(returnedPerson => {
           setPersons(persons.concat(returnedPerson))
-        })
+        }).catch(error => {
+        setErrorMessage(error.response.data.error)
+        setTimeout(() => {
+          setErrorMessage(null)
+        }, 5000)
+      })
     }
     else {
       if (window.confirm(`${newName} already exists, replace the number?`)) {
         const changedPerson = persons.find(n => n.name === newName)
         personService.update(changedPerson.id, nameObject).then(returnedPerson => {
           setPersons(persons.map(person => person.id === changedPerson.id ? returnedPerson : person))
-        })
+        }).catch(error => {
+        setErrorMessage(error.response.data.error)
+        setTimeout(() => {
+          setErrorMessage(null)
+        }, 5000)
+      })
       }
     }
 
@@ -76,6 +88,7 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
+      <Notification message={errorMessage} />
       <Form newName={newName} handleNameChange={handleNameChange} newNumber={newNumber} handleNumberChange={handleNumberChange} addName={addName} />
       <h2>Numbers</h2>
       <Filter onChange={handleFilterChange} value={filter} />
